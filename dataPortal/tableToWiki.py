@@ -1,6 +1,6 @@
 import synapseclient
-
 syn = synapseclient.login()
+import argparse
 
 def writeWholeTable(table):
 	rowset = table.asRowSet()
@@ -51,16 +51,32 @@ def writeProjectTables(table, getProjectIndex):
 
 ### Data upload   syn4939478/wiki/411657
 
-table = syn.tableQuery('select projectEntity, numberOfFiles, numberOfContributors, lateModified from syn7804884 where Active = True order by "lateModified" DESC')
-firstTable = writeProjectTables(table, 0)
-#table = syn.tableQuery('select * from syn7805078')
-#secondTable = writeWholeTable(table)
-
-markdown = "Here is a summary of the latest activity by project:\n%s\n\n" % firstTable
-
-
+def main(projectUploadTable, wikiPage, wikiPageId):
+	# PROJECT_UPLOAD_TABLE = "syn7804884" #syn9727791
+	# WIKIPAGE = "syn4939478" #syn6135075
+	# WIKIPAGE_ID = "411657" #424914
+	table = syn.tableQuery('select projectEntity, numberOfFiles, numberOfContributors, lateModified from %s where Active = True order by "lateModified" DESC' % projectUploadTable)
+	firstTable = writeProjectTables(table, 0)
+	#table = syn.tableQuery('select * from syn7805078')
+	#secondTable = writeWholeTable(table)
+	markdown = "Here is a summary of the latest activity by project:\n%s\n\n" % firstTable
  #"There are numerous types of data available:\n\n%s") % (firstTable, secondTable)
+	wikipage = syn.getWiki(syn.get(wikiPage),wikiPageId)
+	wikipage.markdown = markdown
+	syn.store(wikipage)
 
-wikipage = syn.getWiki(syn.get('syn4939478'),"411657")
-wikipage.markdown = markdown
-syn.store(wikipage)
+def perform_main(args):
+    main(args.projectUploadTable, args.wikiPage, args.wikiPageId)
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Validate GENIE files')
+
+    parser.add_argument("projectUploadTable", type=str, metavar="syn7804884",
+                        help='Synapse Table containing project upload data')
+    parser.add_argument("wikiPage", type=str, metavar="syn4939478",
+                        help='Synapse Id of wikipage')
+    parser.add_argument("wikiPageId", type=str,metavar="411657",
+                        help='Wikipage sub Id')
+    args = parser.parse_args()
+    perform_main(args)
