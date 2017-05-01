@@ -106,3 +106,56 @@ for i in assaysNumSynId.keys():
 	newValues = {'assay':str(i), 'numberOfFiles':assaysNumSynId[i], 'numberOfNF1Genotype':assaysNF1genotype[i], "numberOfNF2Genotype":assaysNF2genotype[i], "numberOfTumorTypes":assaysTumorType[i]}
 	temp = temp.append(pd.DataFrame(newValues, index=[0]))
 print(temp.to_csv(sep="|",index=False))
+
+
+
+
+####### SECOND
+
+
+annotations = syn.tableQuery('select * from syn9692006')
+annot_table = annotations.asDataFrame()
+
+assaysNumSynId = {}
+assaysNF2genotype =  {}
+assaysTumorType = {}
+assaysNF1genotype = {}
+
+assays = set(annot_table['assay'])
+
+NF1table = pd.DataFrame()
+NF2table = pd.DataFrame()
+Tumortable = pd.DataFrame()
+for i in assays:
+	if pd.isnull(i):
+		nf1 = annot_table['nf1Genotype'][annot_table['assay'].isnull()].value_counts(dropna=False)
+		nf2 = annot_table['nf2Genotype'][annot_table['assay'].isnull()].value_counts(dropna=False)
+		tumor = annot_table['tumorType'][annot_table['assay'].isnull()].value_counts(dropna=False)
+	else:		
+		nf1 = annot_table['nf1Genotype'][annot_table['assay'] == i].value_counts(dropna=False)
+		nf2 = annot_table['nf2Genotype'][annot_table['assay'] == i].value_counts(dropna=False)
+		tumor = annot_table['tumorType'][annot_table['assay'] == i].value_counts(dropna=False)
+	
+	nf1 = pd.DataFrame(nf1)
+	nf1['numberOfFiles'] = nf1.nf1Genotype
+	nf1['nf1Genotype'] = nf1.index
+	nf1['assay'] = str(i)
+	NF1table = NF1table.append(nf1)
+	nf2 = pd.DataFrame(nf2)
+	nf2['numberOfFiles'] = nf2.nf2Genotype
+	nf2.nf2Genotype = nf2.index
+	nf2['assay'] = str(i)
+	NF2table = NF2table.append(nf2)
+	tumor = pd.DataFrame(tumor)
+	tumor['numberOfFiles'] = tumor.tumorType
+	tumor.tumorType = tumor.index
+	tumor['assay'] = str(i)
+	Tumortable = Tumortable.append(tumor)
+
+
+print(NF1table[['assay','nf1Genotype','numberOfFiles']].to_csv(sep="|",index=False))
+print(NF2table[['assay','nf2Genotype','numberOfFiles']].to_csv(sep="|",index=False))
+print(Tumortable[['assay','tumorType','numberOfFiles']].to_csv(sep="|",index=False))
+
+
+
